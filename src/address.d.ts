@@ -9,7 +9,9 @@
  * @packageDocumentation
  */
 import { Network } from './networks';
-/** base58check decode result */
+/**
+ * base58check decode result
+ */
 export interface Base58CheckResult {
     /** address hash */
     hash: Buffer;
@@ -27,10 +29,32 @@ export interface Bech32Result {
 }
 /**
  * decode address with base58 specification,  return address version and address hash if valid
+ * * @case
+ * ```ts
+ * // You can test it here and find more case in test/address.spec.ts
+ *
+ * const decode = address.fromBase58Check('1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH')
+ *
+ * console.log(decode.version) // 0
+ *
+ * console.log(decode.hash.toString('hex')) // 751e76e8199196d454941c45d1b3a323f1433bd6
+ * ```
  */
 export declare function fromBase58Check(address: string): Base58CheckResult;
 /**
  * decode address with bech32 specification,  return address version、address prefix and address data if valid
+ * * @case
+ * ```ts
+ * // You can test it here and find more case in test/address.spec.ts
+ *
+ * const actual = address.fromBech32('tb1qqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesrxh6hy')
+ *
+ * console.log(actual.version) // 0
+ *
+ * console.log(actual.prefix) // tb
+ *
+ * console.log(actual.data.toString('hex')) // 000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433
+ * ```
  */
 export declare function fromBech32(address: string): Bech32Result;
 /**
