@@ -645,10 +645,7 @@ export class Psbt {
     return validationResultCount > 0;
   }
 
-  signAllInputsHD(
-    hdKeyPair: HDSigner,
-    sighashTypes: number[] = [Transaction.SIGHASH_ALL],
-  ): this {
+  signAllInputsHD(hdKeyPair: HDSigner, sighashTypes?: number[]): this {
     if (!hdKeyPair || !hdKeyPair.publicKey || !hdKeyPair.fingerprint) {
       throw new Error('Need HDSigner to sign input');
     }
@@ -670,7 +667,7 @@ export class Psbt {
 
   signAllInputsHDAsync(
     hdKeyPair: HDSigner | HDSignerAsync,
-    sighashTypes: number[] = [Transaction.SIGHASH_ALL],
+    sighashTypes?: number[],
   ): Promise<void> {
     return new Promise((resolve, reject): any => {
       if (!hdKeyPair || !hdKeyPair.publicKey || !hdKeyPair.fingerprint) {
@@ -703,7 +700,7 @@ export class Psbt {
   signInputHD(
     inputIndex: number,
     hdKeyPair: HDSigner,
-    sighashTypes: number[] = [Transaction.SIGHASH_ALL],
+    sighashTypes?: number[],
   ): this {
     if (!hdKeyPair || !hdKeyPair.publicKey || !hdKeyPair.fingerprint) {
       throw new Error('Need HDSigner to sign input');
@@ -720,7 +717,7 @@ export class Psbt {
   signInputHDAsync(
     inputIndex: number,
     hdKeyPair: HDSigner | HDSignerAsync,
-    sighashTypes: number[] = [Transaction.SIGHASH_ALL],
+    sighashTypes?: number[],
   ): Promise<void> {
     return new Promise((resolve, reject): any => {
       if (!hdKeyPair || !hdKeyPair.publicKey || !hdKeyPair.fingerprint) {
@@ -1973,11 +1970,12 @@ function getTweakSignersFromHD(
 
   const signers: Array<Signer | SignerAsync> = myDerivations.map(bipDv => {
     const node = hdKeyPair.derivePath(bipDv!.path);
-    if (!bipDv!.pubkey.equals(node.publicKey)) {
+    if (!bipDv!.pubkey.equals(toXOnly(node.publicKey))) {
       throw new Error('pubkey did not match tapBip32Derivation');
     }
-    const h = calculateScriptTreeMerkleRoot(bipDv.leafHashes);
-    const tweakValue = tapTweakHash(node.publicKey, h);
+
+    const h = calculateScriptTreeMerkleRoot(bipDv!.leafHashes);
+    const tweakValue = tapTweakHash(toXOnly(node.publicKey), h);
 
     return node.tweak(tweakValue);
   });
