@@ -4,6 +4,7 @@ exports.tweakKey =
   exports.tapTweakHash =
   exports.tapleafHash =
   exports.findScriptPath =
+  exports.calculateScriptTreeMerkleRoot =
   exports.toHashTree =
   exports.rootHashFromPath =
   exports.MAX_TAPTREE_DEPTH =
@@ -49,6 +50,7 @@ exports.rootHashFromPath = rootHashFromPath;
 function toHashTree(scriptTree) {
   if ((0, types_1.isTapleaf)(scriptTree))
     return { hash: tapleafHash(scriptTree) };
+  if (Buffer.isBuffer(scriptTree)) return { hash: scriptTree };
   const hashes = [toHashTree(scriptTree[0]), toHashTree(scriptTree[1])];
   hashes.sort((a, b) => a.hash.compare(b.hash));
   const [left, right] = hashes;
@@ -59,6 +61,52 @@ function toHashTree(scriptTree) {
   };
 }
 exports.toHashTree = toHashTree;
+/**
+ * Calculates the Merkle root from an array of Taproot leaf hashes.
+ *
+ * @param {Buffer[]} leafHashes - Array of Taproot leaf hashes.
+ * @returns {Buffer} - The Merkle root.
+ */
+function calculateScriptTreeMerkleRoot(leafHashes) {
+  if (!leafHashes || leafHashes.length === 0) {
+    return Buffer.from([]);
+  }
+  leafHashes.sort((a, b) => a.compare(b));
+  const hashes = leafHashes.map(hash => {
+    return {
+      hash,
+    };
+  });
+  while (hashes.length > 1) {
+    const nextLevel = [];
+    for (let i = 0; i < hashes.length; i += 2) {
+      const left = hashes[i];
+      const right = i + 1 === hashes.length ? left : hashes[i + 1];
+      if (i + 1 === hashes.length) {
+        nextLevel.push({
+          hash: left.hash,
+          left,
+          right,
+        });
+      } else {
+        nextLevel.push({
+          hash: tapBranchHash(left.hash, right.hash),
+        });
+      }
+    }
+    hashes.length = 0;
+    hashes.push(...nextLevel);
+  }
+  // script tree root hash
+  const h = Buffer.from([
+    223, 38, 250, 36, 182, 27, 113, 97, 96, 24, 79, 148, 246, 114, 101, 111,
+    130, 99, 2, 31, 10, 105, 167, 122, 11, 20, 184, 176, 212, 10, 82, 111,
+  ]);
+  const isEqual = h.compare(hashes[0].hash);
+  console.log('isEqual', isEqual === 0);
+  return hashes[0].hash;
+}
+exports.calculateScriptTreeMerkleRoot = calculateScriptTreeMerkleRoot;
 /**
  * Given a HashTree, finds the path from a particular hash to the root.
  * @param node - the root of the tree

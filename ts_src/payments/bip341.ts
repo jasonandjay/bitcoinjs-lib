@@ -83,6 +83,56 @@ export function toHashTree(scriptTree: Taptree): HashTree {
 }
 
 /**
+ * Calculates the Merkle root from an array of Taproot leaf hashes.
+ *
+ * @param {Buffer[]} leafHashes - Array of Taproot leaf hashes.
+ * @returns {Buffer} - The Merkle root.
+ */
+export function calculateScriptTreeMerkleRoot(
+  leafHashes: Buffer[],
+): Buffer | undefined {
+  if (!leafHashes || leafHashes.length === 0) {
+    return Buffer.from([]);
+  }
+  leafHashes.sort((a, b) => a.compare(b));
+
+  const hashes = leafHashes.map(hash => {
+    return {
+      hash,
+    };
+  });
+  while (hashes.length > 1) {
+    const nextLevel = [];
+    for (let i = 0; i < hashes.length; i += 2) {
+      const left = hashes[i];
+      const right = i + 1 === hashes.length ? left : hashes[i + 1];
+      if (i + 1 === hashes.length) {
+        nextLevel.push({
+          hash: left.hash,
+          left,
+          right,
+        });
+      } else {
+        nextLevel.push({
+          hash: tapBranchHash(left.hash, right.hash),
+        });
+      }
+    }
+    hashes.length = 0;
+    hashes.push(...nextLevel);
+  }
+  // script tree root hash
+  const h = Buffer.from([
+    223, 38, 250, 36, 182, 27, 113, 97, 96, 24, 79, 148, 246, 114, 101, 111,
+    130, 99, 2, 31, 10, 105, 167, 122, 11, 20, 184, 176, 212, 10, 82, 111,
+  ]);
+  const isEqual = h.compare(hashes[0].hash);
+  console.log('isEqual', isEqual === 0);
+
+  return hashes[0].hash;
+}
+
+/**
  * Given a HashTree, finds the path from a particular hash to the root.
  * @param node - the root of the tree
  * @param hash - the hash to search for
@@ -150,40 +200,4 @@ function serializeScript(s: Buffer): Buffer {
   const buffer = NBuffer.allocUnsafe(varintLen); // better
   varuint.encode(s.length, buffer);
   return NBuffer.concat([buffer, s]);
-}
-
-/**
- * Calculates the Merkle root from an array of Taproot leaf hashes.
- *
- * @param {Buffer[]} leafHashes - Array of Taproot leaf hashes.
- * @returns {Buffer} - The Merkle root.
- */
-export function calculateScriptTreeMerkleRoot(
-  leafHashes: Buffer[],
-): Buffer | undefined {
-  if (!leafHashes || leafHashes.length === 0) {
-    return undefined;
-  }
-  leafHashes.sort((a, b) => a.compare(b));
-
-  const hashes = leafHashes.map(hash => {
-    return {
-      hash: bcrypto.taggedHash('TapLeaf', NBuffer.from(hash)),
-    };
-  });
-  while (hashes.length > 1) {
-    const nextLevel = [];
-    for (let i = 0; i < hashes.length; i += 2) {
-      const left = hashes[i];
-      const right = i + 1 === hashes.length ? left : hashes[i + 1];
-      nextLevel.push({
-        hash: tapBranchHash(left.hash, right.hash),
-        left,
-        right,
-      });
-    }
-    hashes.length = 0;
-    hashes.push(...nextLevel);
-  }
-  return hashes[0].hash;
 }
