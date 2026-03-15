@@ -56,7 +56,8 @@ export function getMeaningfulScript(
   type: 'p2sh' | 'p2wsh' | 'p2sh-p2wsh' | 'raw';
 } {
   const isP2SH = deps.isP2SHScript(script);
-  const isP2SHP2WSH = isP2SH && redeemScript && deps.isP2WSHScript(redeemScript);
+  const isP2SHP2WSH =
+    isP2SH && redeemScript && deps.isP2WSHScript(redeemScript);
   const isP2WSH = deps.isP2WSHScript(script);
 
   if (isP2SH && redeemScript === undefined)
