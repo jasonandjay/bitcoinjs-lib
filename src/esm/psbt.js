@@ -29,6 +29,7 @@ import {
   isP2TR,
 } from './psbt/psbtutils.js';
 import { scriptWitnessToWitnessStack } from './psbt/internal/witness.js';
+import { getFinalScripts } from './psbt/internal/finalize.js';
 import {
   classifyScript,
   getMeaningfulScript,
@@ -975,41 +976,10 @@ class PsbtTransaction {
     return this.tx.toBuffer();
   }
 }
-function canFinalize(input, script, scriptType) {
-  switch (scriptType) {
-    case 'pubkey':
-    case 'pubkeyhash':
-    case 'witnesspubkeyhash':
-      return hasSigs(1, input.partialSig);
-    case 'multisig':
-      const p2ms = payments.p2ms({ output: script });
-      return hasSigs(p2ms.m, input.partialSig, p2ms.pubkeys);
-    default:
-      return false;
-  }
-}
 function checkCache(cache) {
   if (cache.__UNSAFE_SIGN_NONSEGWIT !== false) {
     throw new Error('Not BIP174 compliant, can not export');
   }
-}
-function hasSigs(neededSigs, partialSig, pubkeys) {
-  if (!partialSig) return false;
-  let sigs;
-  if (pubkeys) {
-    sigs = pubkeys
-      .map(pkey => {
-        const pubkey = compressPubkey(pkey);
-        return partialSig.find(
-          pSig => tools.compare(pSig.pubkey, pubkey) === 0,
-        );
-      })
-      .filter(v => !!v);
-  } else {
-    sigs = partialSig;
-  }
-  if (sigs.length > neededSigs) throw new Error('Too many signatures');
-  return sigs.length === neededSigs;
 }
 function isFinalized(input) {
   return !!input.finalScriptSig || !!input.finalScriptWitness;
@@ -1140,54 +1110,6 @@ function getTxCacheValue(key, name, inputs, c) {
   inputFinalizeGetAmts(inputs, tx, c, mustFinalize);
   if (key === '__FEE_RATE') return c.__FEE_RATE;
   else if (key === '__FEE') return c.__FEE;
-}
-function getFinalScripts(inputIndex, input, script, isSegwit, isP2SH, isP2WSH) {
-  const scriptType = classifyScript(script, SCRIPT_TYPE_DEPS);
-  if (!canFinalize(input, script, scriptType))
-    throw new Error(`Can not finalize input #${inputIndex}`);
-  return prepareFinalScripts(
-    script,
-    scriptType,
-    input.partialSig,
-    isSegwit,
-    isP2SH,
-    isP2WSH,
-  );
-}
-function prepareFinalScripts(
-  script,
-  scriptType,
-  partialSig,
-  isSegwit,
-  isP2SH,
-  isP2WSH,
-) {
-  let finalScriptSig;
-  let finalScriptWitness;
-  // Wow, the payments API is very handy
-  const payment = getPayment(script, scriptType, partialSig);
-  const p2wsh = !isP2WSH ? null : payments.p2wsh({ redeem: payment });
-  const p2sh = !isP2SH ? null : payments.p2sh({ redeem: p2wsh || payment });
-  if (isSegwit) {
-    if (p2wsh) {
-      finalScriptWitness = witnessStackToScriptWitness(p2wsh.witness);
-    } else {
-      finalScriptWitness = witnessStackToScriptWitness(payment.witness);
-    }
-    if (p2sh) {
-      finalScriptSig = p2sh.input;
-    }
-  } else {
-    if (p2sh) {
-      finalScriptSig = p2sh.input;
-    } else {
-      finalScriptSig = payment.input;
-    }
-  }
-  return {
-    finalScriptSig,
-    finalScriptWitness,
-  };
 }
 function getHashAndSighashType(
   inputs,
@@ -1389,39 +1311,6 @@ function checkSighashTypeAllowed(sighashType, sighashTypes) {
     );
   }
 }
-function getPayment(script, scriptType, partialSig) {
-  let payment;
-  switch (scriptType) {
-    case 'multisig':
-      const sigs = getSortedSigs(script, partialSig);
-      payment = payments.p2ms({
-        output: script,
-        signatures: sigs,
-      });
-      break;
-    case 'pubkey':
-      payment = payments.p2pk({
-        output: script,
-        signature: partialSig[0].signature,
-      });
-      break;
-    case 'pubkeyhash':
-      payment = payments.p2pkh({
-        output: script,
-        pubkey: partialSig[0].pubkey,
-        signature: partialSig[0].signature,
-      });
-      break;
-    case 'witnesspubkeyhash':
-      payment = payments.p2wpkh({
-        output: script,
-        pubkey: partialSig[0].pubkey,
-        signature: partialSig[0].signature,
-      });
-      break;
-  }
-  return payment;
-}
 function getScriptFromInput(inputIndex, input, cache) {
   const unsignedTx = cache.__TX;
   const res = {
@@ -1481,22 +1370,6 @@ function getSignersFromHD(inputIndex, inputs, hdKeyPair) {
     return node;
   });
   return signers;
-}
-function getSortedSigs(script, partialSig) {
-  const p2ms = payments.p2ms({ output: script });
-  // for each pubkey in order of p2ms script
-  return p2ms.pubkeys
-    .map(pk => {
-      // filter partialSig array by pubkey being equal
-      return (
-        partialSig.filter(ps => {
-          return tools.compare(ps.pubkey, pk) === 0;
-        })[0] || {}
-      ).signature;
-      // Any pubkey without a match will return undefined
-      // this last filter removes all the undefined items in the array.
-    })
-    .filter(v => !!v);
 }
 function sighashTypeToString(sighashType) {
   let text =
@@ -1647,15 +1520,6 @@ function redeemFromFinalWitnessScript(finalScript) {
   const sDecomp = bscript.decompile(lastItem);
   if (!sDecomp) return;
   return lastItem;
-}
-function compressPubkey(pubkey) {
-  if (pubkey.length === 65) {
-    const parity = pubkey[64] & 1;
-    const newKey = pubkey.slice(0, 33);
-    newKey[0] = 2 | parity;
-    return newKey;
-  }
-  return pubkey.slice();
 }
 function isPubkeyLike(buf) {
   return buf.length === 33 && bscript.isCanonicalPubKey(buf);
