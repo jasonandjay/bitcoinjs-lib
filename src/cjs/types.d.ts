@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-export declare const NBufferSchemaFactory: (size: number) => v.SchemaWithPipe<[v.InstanceSchema<Uint8ArrayConstructor, undefined>, v.LengthAction<Uint8Array, number, undefined>]>;
+export declare const NBufferSchemaFactory: (size: number) => v.SchemaWithPipe<readonly [v.InstanceSchema<Uint8ArrayConstructor, undefined>, v.LengthAction<Uint8Array, number, undefined>]>;
 /**
  * Checks if two arrays of Buffers are equal.
  * @param a - The first array of Buffers.
@@ -34,12 +34,12 @@ export interface TinySecp256k1Interface {
     isXOnlyPoint(p: Uint8Array): boolean;
     xOnlyPointAddTweak(p: Uint8Array, tweak: Uint8Array): XOnlyPointAddTweakResult | null;
 }
-export declare const Buffer256bitSchema: v.SchemaWithPipe<[v.InstanceSchema<Uint8ArrayConstructor, undefined>, v.LengthAction<Uint8Array, number, undefined>]>;
-export declare const Hash160bitSchema: v.SchemaWithPipe<[v.InstanceSchema<Uint8ArrayConstructor, undefined>, v.LengthAction<Uint8Array, number, undefined>]>;
-export declare const Hash256bitSchema: v.SchemaWithPipe<[v.InstanceSchema<Uint8ArrayConstructor, undefined>, v.LengthAction<Uint8Array, number, undefined>]>;
+export declare const Buffer256bitSchema: v.SchemaWithPipe<readonly [v.InstanceSchema<Uint8ArrayConstructor, undefined>, v.LengthAction<Uint8Array, number, undefined>]>;
+export declare const Hash160bitSchema: v.SchemaWithPipe<readonly [v.InstanceSchema<Uint8ArrayConstructor, undefined>, v.LengthAction<Uint8Array, number, undefined>]>;
+export declare const Hash256bitSchema: v.SchemaWithPipe<readonly [v.InstanceSchema<Uint8ArrayConstructor, undefined>, v.LengthAction<Uint8Array, number, undefined>]>;
 export declare const BufferSchema: v.InstanceSchema<Uint8ArrayConstructor, undefined>;
-export declare const HexSchema: v.SchemaWithPipe<[v.StringSchema<undefined>, v.RegexAction<string, undefined>]>;
-export declare const UInt8Schema: v.SchemaWithPipe<[v.NumberSchema<undefined>, v.IntegerAction<number, undefined>, v.MinValueAction<number, 0, undefined>, v.MaxValueAction<number, 255, undefined>]>;
-export declare const UInt32Schema: v.SchemaWithPipe<[v.NumberSchema<undefined>, v.IntegerAction<number, undefined>, v.MinValueAction<number, 0, undefined>, v.MaxValueAction<number, 4294967295, undefined>]>;
-export declare const SatoshiSchema: v.SchemaWithPipe<[v.BigintSchema<undefined>, v.MinValueAction<bigint, 0n, undefined>, v.MaxValueAction<bigint, 9223372036854775807n, undefined>]>;
+export declare const HexSchema: v.SchemaWithPipe<readonly [v.StringSchema<undefined>, v.RegexAction<string, undefined>]>;
+export declare const UInt8Schema: v.SchemaWithPipe<readonly [v.NumberSchema<undefined>, v.IntegerAction<number, undefined>, v.MinValueAction<number, 0, undefined>, v.MaxValueAction<number, 255, undefined>]>;
+export declare const UInt32Schema: v.SchemaWithPipe<readonly [v.NumberSchema<undefined>, v.IntegerAction<number, undefined>, v.MinValueAction<number, 0, undefined>, v.MaxValueAction<number, 4294967295, undefined>]>;
+export declare const SatoshiSchema: v.SchemaWithPipe<readonly [v.BigintSchema<undefined>, v.MinValueAction<bigint, 0n, undefined>, v.MaxValueAction<bigint, 9223372036854775807n, undefined>]>;
 export declare const NullablePartial: (a: Record<string, any>) => v.ObjectSchema<{}, undefined>;
