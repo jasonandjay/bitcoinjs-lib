@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [18, 'lts/*']
+        node-version: [18, 24]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
     steps:
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2
@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [18, 'lts/*']
+        node-version: [18, 24]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
     services:
       regtest:
@@ -67,7 +67,7 @@ jobs:
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
-          node-version: 'lts/*'
+          node-version: '24'
           registry-url: https://registry.npmjs.org/
           cache: 'npm'
       - run: npm ci
@@ -78,7 +78,7 @@ jobs:
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
-          node-version: 'lts/*'
+          node-version: '24'
           registry-url: https://registry.npmjs.org/
           cache: 'npm'
       - run: npm ci
@@ -89,7 +89,7 @@ jobs:
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
-          node-version: 'lts/*'
+          node-version: '24'
           registry-url: https://registry.npmjs.org/
           cache: 'npm'
       - run: npm ci
@@ -100,7 +100,7 @@ jobs:
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
-          node-version: 'lts/*'
+          node-version: '24'
           registry-url: https://registry.npmjs.org/
           cache: 'npm'
       - run: npm ci
@@ -111,7 +111,7 @@ jobs:
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
-          node-version: 'lts/*'
+          node-version: '24'
           registry-url: https://registry.npmjs.org/
           cache: 'npm'
       - run: npm ci
@@ -123,7 +123,7 @@ jobs:
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
-          node-version: 'lts/*'
+          node-version: '24'
           registry-url: https://registry.npmjs.org/
           cache: 'npm'
       - run: npm ci
